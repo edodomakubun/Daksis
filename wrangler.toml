@@ -1,0 +1,6 @@
+name = "arsip-sekolah"
+pages_build_output_dir = "./frontend"
+[[d1_databases]]
+binding = "DB"
+database_name = "arsip-sekolah-db"
+database_id = "5fd4b05a-c698-4974-bff8-3b2d87bafa2a"
