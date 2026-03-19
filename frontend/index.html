@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Arsip Digital Sekolah</title>
+    <!-- Tailwind CSS (via CDN for simplicity in this example) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- JSZip & FileSaver -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f3f4f6; }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-4 text-gray-800">Aplikasi Arsip Digital SD Inpres</h1>
+
+        <p class="mb-6 text-gray-600">Sistem siap digunakan. Halaman ini adalah contoh antarmuka awal.</p>
+
+        <!-- Test Folder API -->
+        <div class="mb-8 border p-4 rounded bg-gray-50">
+            <h2 class="text-xl font-semibold mb-2">Manajemen Folder Kelas</h2>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="newFolderName" placeholder="Nama Folder (misal: Kelas 1)" class="border p-2 rounded flex-1">
+                <button id="btnCreateFolder" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Buat Folder</button>
+            </div>
+            <button id="btnLoadFolders" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 mb-2">Muat Daftar Folder</button>
+            <ul id="folderList" class="list-disc pl-5 text-gray-700 mt-2"></ul>
+        </div>
+
+        <!-- Test Upload API -->
+        <div class="mb-8 border p-4 rounded bg-gray-50">
+            <h2 class="text-xl font-semibold mb-2">Upload Dokumen Siswa</h2>
+            <form id="uploadForm" class="flex flex-col gap-3">
+                <input type="text" id="studentId" placeholder="ID Siswa (dari D1)" required class="border p-2 rounded">
+                <select id="docType" required class="border p-2 rounded bg-white">
+                    <option value="">Pilih Jenis Dokumen</option>
+                    <option value="KK">Kartu Keluarga (KK)</option>
+                    <option value="Akte">Akte Kelahiran</option>
+                    <option value="KTP">KTP Orang Tua</option>
+                    <option value="Foto">Foto Siswa</option>
+                </select>
+                <input type="file" id="fileInput" required class="border p-2 rounded bg-white">
+                <input type="text" id="catatan" placeholder="Catatan (Opsional)" class="border p-2 rounded">
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Upload ke Google Drive</button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Import our snippet logic -->
+    <script src="snippets.js"></script>
+    <script>
+        // Example logic to test the API
+
+        // 1. Load Folders
+        document.getElementById('btnLoadFolders').addEventListener('click', async () => {
+            try {
+                const res = await fetch('/api/folders');
+                const data = await res.json();
+                const list = document.getElementById('folderList');
+                list.innerHTML = '';
+
+                if (data.error) throw new Error(data.error);
+
+                if (data.length === 0) {
+                    list.innerHTML = '<li class="text-gray-500 italic">Belum ada folder.</li>';
+                }
+
+                data.forEach(f => {
+                    const li = document.createElement('li');
+                    li.textContent = `${f.nama_folder} (Drive ID: ${f.drive_folder_id})`;
+                    list.appendChild(li);
+                });
+            } catch (err) {
+                alert('Gagal memuat folder: ' + err.message);
+            }
+        });
+
+        // 2. Create Folder
+        document.getElementById('btnCreateFolder').addEventListener('click', async () => {
+            const name = document.getElementById('newFolderName').value;
+            if (!name) return alert('Nama folder wajib diisi!');
+
+            try {
+                const res = await fetch('/api/folders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nama_folder: name })
+                });
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+
+                alert(`Folder '${data.nama_folder}' berhasil dibuat!`);
+                document.getElementById('newFolderName').value = '';
+                document.getElementById('btnLoadFolders').click(); // Refresh list
+            } catch (err) {
+                alert('Gagal membuat folder: ' + err.message);
+            }
+        });
+
+        // 3. Upload File
+        document.getElementById('uploadForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const studentId = document.getElementById('studentId').value;
+            const docType = document.getElementById('docType').value;
+            const catatan = document.getElementById('catatan').value;
+
+            if (fileInput.files.length > 0) {
+                uploadDocument(fileInput.files[0], studentId, docType, catatan);
+            }
+        });
+    </script>
+</body>
+</html>
