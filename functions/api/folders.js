@@ -5,6 +5,9 @@ import { getGoogleAuthToken } from '../utils/googleAuth.js';
  */
 async function getDriveAuthToken(env) {
   try {
+    if (!env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+        throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON environment variable is missing.");
+    }
     const serviceAccount = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_JSON);
     const scopes = ['https://www.googleapis.com/auth/drive'];
     return await getGoogleAuthToken(serviceAccount, scopes);
